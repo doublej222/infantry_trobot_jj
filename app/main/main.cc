@@ -14,8 +14,9 @@
 #include "utils/logger.h"
 #include "utils/os.h"
 
-extern void example_task(void *args);
-
+extern void msg_task(void *args);
+extern void chassis_task(void *args);
+extern void gimbal_task(void *args);
 extern "C" [[noreturn]] void app_entrance(void *args) {
     bsp_hw_init();
 
@@ -25,10 +26,9 @@ extern "C" [[noreturn]] void app_entrance(void *args) {
 
     // Init Basic Components
 
-    logger::init(E_UART_6, logger::INFO);
-
+    logger::init(E_UART_1, logger::INFO);
     // terminal::init(E_UART_6, 921600);
-    // rc::dr16::init(E_UART_3);
+    rc::dr16::init(E_UART_3);
     // rc::ht10::init(E_UART_3);
 
     ins::init();
@@ -39,9 +39,12 @@ extern "C" [[noreturn]] void app_entrance(void *args) {
     bsp_buzzer_flash(4500, 0.2f, 75);
 
     // Init Application Tasks
-    os::task::static_create(example_task, nullptr, "example_task", 1024, os::task::Priority::HIGH);
 
+    // os::task::static_create(chassis_task, nullptr, "chassis_task", 512, os::task::Priority::HIGH);
+    os::task::static_create(gimbal_task, nullptr, "gimbal_task", 512, os::task::Priority::HIGH);
+    os::task::static_create(msg_task, nullptr, "msg_task", 128, os::task::Priority::HIGH);
     for (;;) {
+
         bsp_led_set_hsv(static_cast<float>(bsp_time_get_ms() % 3000) / 3000.0f, 1.0f, 0.3f);
         bsp_iwdg_refresh();
         os::task::sleep(5);
